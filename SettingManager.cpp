@@ -2,14 +2,17 @@
 
 bool SettingManager::registerSetting(String key, bool* bool_pointer, BoolCallback bool_callback) {
   Setting* setting = this->getSetting(key);
+  
   if (setting) {
+    setting->setting_type = SettingType::BOOL;
+    setting->default_value = bool_pointer ? String(*bool_pointer) : "";
     setting->bool_pointer = bool_pointer;
     setting->bool_callback = bool_callback;
   }
   else {
     if (this->setting_count >= MAX_SETTINGS_ARRAY_SIZE) return false;
     
-    Setting setting = {key, SettingType::BOOL};
+    Setting setting = {key, SettingType::BOOL, bool_pointer ? String(*bool_pointer) : ""};
     setting.bool_pointer = bool_pointer;
     setting.bool_callback = bool_callback;
     
@@ -136,7 +139,11 @@ bool SettingManager::setValue(String key, String value) {
   Setting* setting = this->getSetting(key);
   if (!setting) return false;
   
-  switch (setting->type) {
+  if (value.length() == 0 && setting->default_value.length() != 0) {
+    value = setting->default_value;
+  }
+  
+  switch (setting->setting_type) {
     case SettingType::BOOL: {
       bool bool_value = (value == "true" || value == "1" || value == "on" || value == "yes");
       if (setting->bool_pointer) {
@@ -202,12 +209,27 @@ bool SettingManager::setValue(String key, String value) {
   return true;
 }
 
+bool SettingManager::setDefaultValue(String key, String default_value) {
+  Setting* setting = this->getSetting(key);
+  if (!setting) return false;
+  
+  setting->default_value = default_value;
+}
+
+void SettingManager::restoreDefaultValue(String key) {
+  
+}
+
+void SettingManager::restoreDefaultValues() {
+  
+}
+
 bool SettingManager::updateSettings(String input) {
   int semicolonIndex = input.indexOf(":");
   if (semicolonIndex == -1) return false;
   
   String key = input.substring(0, semicolonIndex);
-  String value = input.substring(semicolonIndex + 1, input.length() - 1);
+  String value = input.substring(semicolonIndex + 1, input.length() - 1); // TODO make this more flexible instead of simply removing the last newline character
   
   return this->setValue(key, value);
 }

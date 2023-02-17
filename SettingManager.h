@@ -5,9 +5,10 @@
 #define MAX_SETTINGS_ARRAY_SIZE 32
 #endif
 
-//#include <Arduino.h>
 #include <stdint.h>
 #include <WString.h>
+
+//#include "Setting.h"
 
 class SettingManager {
 public:
@@ -36,7 +37,11 @@ public:
   bool registerSetting(String key, String* string_pointer, StringCallback string_callback = nullptr);
   bool registerSetting(String key, StringCallback string_callback, String* string_pointer = nullptr);
   
-  bool setValue(String key, String value);
+  bool setValue(String key, String value = "");
+  
+  bool setDefaultValue(String key, String default_value = "");
+  void restoreDefaultValue(String key);
+  void restoreDefaultValues();
 
   bool updateSettings(String input);
   
@@ -45,7 +50,9 @@ private:
   
   struct Setting {
     String key;
-    SettingType type;
+    SettingType setting_type;
+    
+    String default_value;
     
     union {
       bool* bool_pointer;
