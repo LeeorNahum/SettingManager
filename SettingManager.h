@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include <WString.h>
 
 class SettingManager {
 public:
@@ -17,7 +18,7 @@ public:
   using DoubleCallback = void (*)(double);
   using StringCallback = void (*)(String);
   
-  bool registerSetting(String key, bool* bool_pointer, StringCallback bool_callback = nullptr) {
+  bool registerSetting(String key, bool* bool_pointer, BoolCallback bool_callback = nullptr) {
     Setting* setting = this->getSetting(key);
     if (setting) {
       setting->bool_pointer = bool_pointer;
@@ -39,7 +40,7 @@ public:
     this->registerSetting(key, bool_pointer, bool_callback);
   }
   
-  bool registerSetting(String key, char* char_pointer, StringCallback char_callback = nullptr) {
+  bool registerSetting(String key, char* char_pointer, CharCallback char_callback = nullptr) {
     Setting* setting = this->getSetting(key);
     if (setting) {
       setting->char_pointer = char_pointer;
@@ -61,7 +62,7 @@ public:
     this->registerSetting(key, char_pointer, char_callback);
   }
   
-  bool registerSetting(String key, int* int_pointer, StringCallback int_callback = nullptr) {
+  bool registerSetting(String key, int* int_pointer, IntCallback int_callback = nullptr) {
     Setting* setting = this->getSetting(key);
     if (setting) {
       setting->int_pointer = int_pointer;
@@ -83,7 +84,7 @@ public:
     this->registerSetting(key, int_pointer, int_callback);
   }
   
-  bool registerSetting(String key, float* float_pointer, StringCallback float_callback = nullptr) {
+  bool registerSetting(String key, float* float_pointer, FloatCallback float_callback = nullptr) {
     Setting* setting = this->getSetting(key);
     if (setting) {
       setting->float_pointer = float_pointer;
@@ -105,7 +106,7 @@ public:
     this->registerSetting(key, float_pointer, float_callback);
   }
   
-  bool registerSetting(String key, double* double_pointer, StringCallback double_callback = nullptr) {
+  bool registerSetting(String key, double* double_pointer, DoubleCallback double_callback = nullptr) {
     Setting* setting = this->getSetting(key);
     if (setting) {
       setting->double_pointer = double_pointer;
@@ -145,7 +146,7 @@ public:
     return true;
   }
   
-  bool registerSetting(String key, StringCallback string_callback, string* string_pointer = nullptr) {
+  bool registerSetting(String key, StringCallback string_callback, String* string_pointer = nullptr) {
     this->registerSetting(key, string_pointer, string_callback);
   }
   
@@ -230,24 +231,22 @@ private:
   struct Setting {
     String key;
     Type type;
-    
-    bool* bool_pointer = nullptr;
-    BoolCallback bool_callback = nullptr;
-    
-    char* char_pointer = nullptr;
-    CharCallback char_callback = nullptr;
-    
-    int* int_pointer = nullptr;
-    IntCallback int_callback = nullptr;
-    
-    float* float_pointer = nullptr;
-    FloatCallback float_callback = nullptr;
-    
-    double* double_pointer = nullptr;
-    DoubleCallback double_callback = nullptr;
-    
-    String* string_pointer = nullptr;
-    StringCallback string_callback = nullptr;
+    union {
+      bool* bool_pointer;
+      char* char_pointer;
+      int* int_pointer;
+      float* float_pointer;
+      double* double_pointer;
+      String* string_pointer;
+    };
+    union {
+      BoolCallback bool_callback;
+      CharCallback char_callback;
+      IntCallback int_callback;
+      FloatCallback float_callback;
+      DoubleCallback double_callback;
+      StringCallback string_callback;
+    };
   };
   
   Setting settings[MAX_SETTINGS_ARRAY_SIZE];
