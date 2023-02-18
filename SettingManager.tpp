@@ -1,0 +1,100 @@
+//#include "SettingManager.h"
+
+template <typename... Settings>
+SettingManager::SettingManager(Settings*... settings) {
+  this->setSettings(settings...);
+}
+
+template <uint8_t Size>
+SettingManager::SettingManager(SettingType (&setting_array)[Size]) {
+  this->setSettings(setting_array);
+}
+
+bool SettingManager::addSetting(SettingType setting) {
+  if (this->setting_count >= MAX_SETTINGS_ARRAY_SIZE) {
+    return false;
+  }
+
+  this->settings[this->setting_count++] = setting;
+  return true;
+}
+
+template <typename... Settings>
+bool SettingManager::addSettings(SettingType setting, Settings*... settings) {
+  bool success = true;
+  
+  success = success && addSetting(setting);
+  success = success && addSettings(settings...);
+  
+  return success;
+}
+
+bool SettingManager::addSettings() {
+  return true;
+}
+
+template <uint8_t Size>
+bool SettingManager::addSettings(SettingType (&setting_array)[Size]) {
+  bool success = true;
+
+  for (uint8_t i = 0; i < Size; i++) {
+    success = success && this->addSetting(setting_array[i]);
+  }
+
+  return success;
+}
+
+bool SettingManager::setSetting(SettingType setting) {
+  this->clearSettings();
+  return this->addSetting(setting);
+}
+
+template <typename... Settings>
+bool SettingManager::setSettings(Settings*... settings) {
+  this->clearSettings();
+  return this->addSettings(settings...);
+}
+
+template <uint8_t Size>
+bool SettingManager::setSettings(SettingType (&setting_array)[Size]) {
+  this->clearSettings();
+  return this->addSettings(setting_array);
+}
+
+bool SettingManager::clearSettings() {
+  if (!this->setting_count > 0) {
+    return false;
+  }
+  
+  for (uint8_t i = 0; i < MAX_SETTINGS_ARRAY_SIZE; i++) {
+    this->settings[i] = nullptr;
+  }
+  
+  this->setting_count = 0;
+  return true;
+}
+
+bool SettingManager::restoreDefaultValues() {
+  bool success = false;
+  for (uint8_t i = 0; i < setting_count; i++) {
+    success = success || settings[i]->restoreDefaultValue();
+  }
+  return success;
+}
+
+bool SettingManager::updateSettings(String input) {
+  int semicolonIndex = input.indexOf(":");
+  if (semicolonIndex == -1) return false;
+  
+  String key = input.substring(0, semicolonIndex);
+  String value = input.substring(semicolonIndex + 1, input.length() - 1); // TODO make this more flexible instead of simply removing the last newline character
+  
+  bool success = false;
+  for (uint8_t i = 0; i < setting_count; i++) {
+    if (settings[i]->getKey() == key) {
+      settings[i]->setValue(value);
+      success = true;
+    }
+  }
+  return success;
+}
