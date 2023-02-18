@@ -2,27 +2,12 @@
 #define SETTING_H
 
 #include <WString.h>
-
-//
-// Generic catch-all implementation.
-template <typename T_ty> struct TypeInfo { static const char * name; };
-template <typename T_ty> const char * TypeInfo<T_ty>::name = "unknown";
-
-// Handy macro to make querying stuff easier.
-#define TYPE_NAME(var) TypeInfo< typeof(var) >::name
-
-// Handy macro to make defining stuff easier.
-#define MAKE_TYPE_INFO(type)  template <> const char * TypeInfo<type>::name = #type;
-
-// Type-specific implementations.
-MAKE_TYPE_INFO( int )
-MAKE_TYPE_INFO( float )
-MAKE_TYPE_INFO( String )
-//
+#include <stdint.h>
+#include "TypeName.h"
 
 class SettingBase {
   public:
-    virtual ~SettingBase() {} //
+    //virtual ~SettingBase() {}
     virtual String getKey() = 0;
     virtual bool restoreDefaultValue() = 0;
     virtual void setValue(String value = "") = 0;
@@ -63,6 +48,8 @@ class Setting: public SettingBase {
     static bool sameType(T type1, T type2);
     template <typename T, typename K>
     static bool sameType(T type1, K type2);
+    
+    void StringThing(String value);
 };
 
 #include "Setting.tpp"

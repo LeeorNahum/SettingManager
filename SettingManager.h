@@ -7,11 +7,6 @@
 
 #include "Setting.h"
 
-//class SettingBase;
-
-//template <typename Type>
-//class Setting;
-
 using SettingType = SettingBase*;
 
 class SettingManager {
