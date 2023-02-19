@@ -12,6 +12,7 @@ The SettingManager library provides a way to manage and update settings in an Ar
   - [Serial Monitor](#serial-monitor)
 - [Examples](#examples)
   - [LED Example](#led-example)
+  - [BluetoothSerial NVS Example](#bluetoothserial-nvs-example)
 
 ## Usage
 
@@ -153,7 +154,7 @@ void loop() {
 }
 ```
 
-### BluetoothSerial NVS
+### BluetoothSerial NVS Example
 
 This example demonstrates reading from both Serial and BluetoothSerial and then saving the variable in flash using the NVS library.
 
