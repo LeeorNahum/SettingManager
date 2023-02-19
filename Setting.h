@@ -2,14 +2,11 @@
 #define SETTING_H
 
 #include <WString.h>
-#include <stdint.h>
-#include "TypeName.h"
 
 class SettingBase {
   public:
-    //virtual ~SettingBase() {}
     virtual String getKey() = 0;
-    virtual bool restoreDefaultValue() = 0;
+    virtual void restoreDefaultSetting() = 0;
     virtual void setValue(String value = "") = 0;
 };
 
@@ -29,27 +26,20 @@ class Setting: public SettingBase {
     
     void setCallback(SettingCallback callback = nullptr);
     
-    void setDefaultValue(String default_value = "");
-    String getDefaultValue();
+    void setDefaultSetting(String default_setting = "");
+    String getDefaultSetting();
     
-    bool restoreDefaultValue() override;
+    void restoreDefaultSetting() override;
     
     void setValue(String value = "") override;
     Type getValue();
     
   private:
-    String key;
-    Type* setting_pointer;
-    SettingCallback callback;
+    String key = "";
+    Type* setting_pointer = nullptr;
+    SettingCallback callback = nullptr;
     
-    String default_value;
-    
-    template <typename T>
-    static bool sameType(T type1, T type2);
-    template <typename T, typename K>
-    static bool sameType(T type1, K type2);
-    
-    void StringThing(String value);
+    String default_setting = "";
 };
 
 #include "Setting.tpp"

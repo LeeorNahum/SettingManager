@@ -3,7 +3,6 @@ Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callba
   this->setKey(key);
   this->setSettingPointer(setting_pointer);
   this->setCallback(callback);
-  this->setDefaultValue(setting_pointer ? String(*setting_pointer) : "");
 }
 
 template <typename Type>
@@ -11,7 +10,6 @@ Setting<Type>::Setting(String key, SettingCallback callback, Type* setting_point
   this->setKey(key);
   this->setSettingPointer(setting_pointer);
   this->setCallback(callback);
-  this->setDefaultValue(setting_pointer ? String(*setting_pointer) : "");
 }
 
 template <typename Type>
@@ -27,6 +25,7 @@ String Setting<Type>::getKey() {
 template <typename Type>
 void Setting<Type>::setSettingPointer(Type* setting_pointer) {
   this->setting_pointer = setting_pointer;
+  this->setDefaultSetting(setting_pointer ? String(*setting_pointer) : "");
 }
 
 template <typename Type>
@@ -40,124 +39,23 @@ void Setting<Type>::setCallback(SettingCallback callback) {
 }
 
 template <typename Type>
-void Setting<Type>::setDefaultValue(String default_value) {
-  this->default_value = default_value;
+void Setting<Type>::setDefaultSetting(String default_setting) {
+  this->default_setting = default_setting;
 }
 
 template <typename Type>
-String Setting<Type>::getDefaultValue() {
-  return this->default_value;
+String Setting<Type>::getDefaultSetting() {
+  return this->default_setting;
 }
 
 template <typename Type>
-bool Setting<Type>::restoreDefaultValue() {
-  if (this->getDefaultValue().length() > 0) {
-    this->setValue();
-    return true;
-  }
-  return false;
+void Setting<Type>::restoreDefaultSetting() {
+  this->setValue();
 }
-
-template <typename Type>
-void Setting<Type>::StringThing(String value) {
-  if (this->setting_pointer) *this->setting_pointer = value;
-  if (this->callback) this->callback(value);
-}
-
-/*template <typename Type>
-void Setting<Type>::setValue(String value) {
-  if (value.length() == 0 && this->getDefaultValue().length() > 0) value = this->getDefaultValue();
-  
-  Type setting_value;
-  
-  if (TYPE_NAME(setting_value) == "bool") {
-    setting_value = (value == "true" || value == "1" || value == "on" || value == "yes");
-  }
-  else if (TYPE_NAME(setting_value) == "char") {
-    setting_value = value[0];
-  }
-  else if (TYPE_NAME(setting_value) == "float") {
-    setting_value = value.toFloat();
-  }
-  else if (TYPE_NAME(setting_value) == "double") {
-    setting_value = value.toDouble();
-  }
-  else if (TYPE_NAME(setting_value) == "unknown") {
-    setting_value = value.toInt();
-  }
-  else if (TYPE_NAME(setting_value) == "short unsigned int") {
-    setting_value = value.toInt();
-  }
-  else if (TYPE_NAME(setting_value) == "String") {
-    //setting_value = value;
-    //if (this->setting_pointer) *this->setting_pointer = (const char*)value;
-    //if (this->callback) this->callback((const char*)value);
-    this->StringThing(value);
-  }
-  else {
-    setting_value = value.toInt();
-  }
-  
-  switch (TYPE_NAME(setting_value)) {
-    case "bool":
-      setting_value = (value == "true" || value == "1" || value == "on" || value == "yes");
-      break;
-    case "char":
-      setting_value = value[0];
-      break;
-    case "float":
-      setting_value = value.toFloat();
-      break;
-    case "double":
-      setting_value = value.toDouble();
-      break;
-    case "String":
-      setting_value = value;
-      break;
-    default:
-      setting_value = value.toInt();
-      break;
-  }
-  if (this->sameType((Type)1, (bool)true)) {
-    setting_value = (value == "true" || value == "1" || value == "on" || value == "yes");
-  }
-  else if (this->sameType((Type)1, (char)'a')) {
-    setting_value = value[0];
-  }
-  else if (this->sameType((Type)1, (float)1.0)) {
-    setting_value = value.toFloat();
-  }
-  else if (this->sameType((Type)1, (double)1.0)) {
-    setting_value = value.toDouble();
-  }
-  else if (this->sameType((Type)1, (unsigned char)1)) {
-    char buf[value.length() + 1];
-    value.toCharArray(buf, value.length() + 1);
-    setting_value = (unsigned char) strtoul(buf, NULL, 10);
-  }
-  else if (this->sameType((Type)1, (int)1)) {
-    setting_value = value.toInt();
-  }
-  else if (this->sameType((Type)1, String(1))) {
-    setting_value = value;
-  }
-  else {  
-    setting_value = value.toInt();
-  }
-  
-  Serial.print(this->getKey()); Serial.print(":"); Serial.print(setting_value); Serial.print(" "); Serial.println( TYPE_NAME(setting_value) );
-
-  if (this->setting_pointer) *this->setting_pointer = setting_value;
-  if (this->callback) this->callback(setting_value);
-}*/
-
-// BOOL, CHAR, INT, FLOAT, DOUBLE, STRING
-
-
 
 template <typename Type>
 void Setting<Type>::setValue(String value) {
-  if (value.length() == 0 && this->getDefaultValue().length() > 0) value = this->getDefaultValue();
+  if (value.length() == 0 && this->getDefaultSetting().length() > 0) value = this->getDefaultSetting();
   
   Type setting_value = value.toInt();
   
@@ -165,10 +63,9 @@ void Setting<Type>::setValue(String value) {
   if (this->callback) this->callback(setting_value);
 }
 
-
 template <>
 void Setting<bool>::setValue(String value) {
-  if (value.length() == 0 && this->getDefaultValue().length() > 0) value = this->getDefaultValue();
+  if (value.length() == 0 && this->getDefaultSetting().length() > 0) value = this->getDefaultSetting();
   
   bool setting_value = (value == "true" || value == "1" || value == "on" || value == "yes");
 
@@ -178,7 +75,7 @@ void Setting<bool>::setValue(String value) {
 
 template <>
 void Setting<char>::setValue(String value) {
-  if (value.length() == 0 && this->getDefaultValue().length() > 0) value = this->getDefaultValue();
+  if (value.length() == 0 && this->getDefaultSetting().length() > 0) value = this->getDefaultSetting();
   
   char setting_value = value[0];
 
@@ -188,7 +85,7 @@ void Setting<char>::setValue(String value) {
 
 template <>
 void Setting<float>::setValue(String value) {
-  if (value.length() == 0 && this->getDefaultValue().length() > 0) value = this->getDefaultValue();
+  if (value.length() == 0 && this->getDefaultSetting().length() > 0) value = this->getDefaultSetting();
   
   float setting_value = value.toFloat();
 
@@ -198,7 +95,7 @@ void Setting<float>::setValue(String value) {
 
 template <>
 void Setting<double>::setValue(String value) {
-  if (value.length() == 0 && this->getDefaultValue().length() > 0) value = this->getDefaultValue();
+  if (value.length() == 0 && this->getDefaultSetting().length() > 0) value = this->getDefaultSetting();
   
   double setting_value = value.toDouble();
 
@@ -208,27 +105,13 @@ void Setting<double>::setValue(String value) {
 
 template <>
 void Setting<String>::setValue(String value) {
-  if (value.length() == 0 && this->getDefaultValue().length() > 0) value = this->getDefaultValue();
+  if (value.length() == 0 && this->getDefaultSetting().length() > 0) value = this->getDefaultSetting();
   
   if (this->setting_pointer) *this->setting_pointer = value;
   if (this->callback) this->callback(value);
 }
 
-
-
 template <typename Type>
 Type Setting<Type>::getValue() {
   return *this->setting_pointer;
-}
-
-template <typename Type>
-template <typename T>
-bool Setting<Type>::sameType(T type1, T type2) {
-  return true;
-}
-
-template <typename Type>
-template <typename T, typename K>
-bool Setting<Type>::sameType(T type1, K type2) {
-  return true;
 }
