@@ -67,7 +67,7 @@ template <>
 void Setting<bool>::setValue(String value) {
   if (value.length() == 0 && this->getDefaultSetting().length() > 0) value = this->getDefaultSetting();
   
-  bool setting_value = (value == "true" || value == "1" || value == "on" || value == "yes");
+  bool setting_value = (value == "true" || value == "1" || value == "yes" || value == "on" || value == "HIGH");
 
   if (this->setting_pointer) *this->setting_pointer = setting_value;
   if (this->callback) this->callback(setting_value);
