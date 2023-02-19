@@ -13,7 +13,7 @@ class SettingBase {
 template <typename Type>
 class Setting: public SettingBase {
   public:
-    using SettingCallback = void (*)(Type); // using SettingCallback = void (*)(Setting<Type>*);
+    using SettingCallback = void (*)(Type);
     
     Setting(String key, Type* setting_pointer, SettingCallback callback = nullptr);
     Setting(String key, SettingCallback callback, Type* setting_pointer = nullptr);

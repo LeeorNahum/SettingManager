@@ -104,7 +104,7 @@ bool SettingManager::updateSettings(String input) {
   if (semicolonIndex == -1) return false;
   
   String key = input.substring(0, semicolonIndex);
-  String value = input.substring(semicolonIndex + 1, input.length() - 1); // TODO make this more flexible instead of simply removing the last newline character
+  String value = input.substring(semicolonIndex + 1, input.length() - 1);
   
   if (this->getRestoreDefaultSettingsKey() == key) {
     if (this->getRestoreDefaultSettingsKey().length() > 0) {
