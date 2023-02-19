@@ -11,12 +11,14 @@ using SettingType = SettingBase*;
 
 class SettingManager {
   public:
-    //using Setting = SettingBase*;
-    
     template <typename... Settings>
-    SettingManager(Settings*... settings);
+    SettingManager(String restore_default_settings_key = "", Settings*... settings);
+    template <typename... Settings>
+    SettingManager(SettingType setting, Settings*... settings);
     template <uint8_t Size>
-    SettingManager(SettingType (&setting_array)[Size]);
+    SettingManager(String restore_default_settings_key, SettingType (&setting_array)[Size]);
+    template <uint8_t Size>
+    SettingManager(SettingType (&setting_array)[Size], String restore_default_settings_key = "");
     
     bool addSetting(SettingType setting);
     template <typename... Settings>
@@ -29,16 +31,21 @@ class SettingManager {
     bool setSettings(Settings*... settings);
     template <uint8_t Size>
     bool setSettings(SettingType (&setting_array)[Size]);
+    
+    void setRestoreDefaultSettingsKey(String restore_default_settings_key = "");
+    String getRestoreDefaultSettingsKey();
 
     bool clearSettings();
     
-    bool restoreDefaultValues();
+    void restoreDefaultSettings();
 
     bool updateSettings(String input);
     
   private:
-    SettingType settings[MAX_SETTINGS_ARRAY_SIZE];
+    SettingType settings[MAX_SETTINGS_ARRAY_SIZE] = {nullptr};
     uint8_t setting_count = 0;
+    
+    String restore_default_settings_key = "";
     
     bool addSettings();
 };
