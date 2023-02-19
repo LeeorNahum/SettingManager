@@ -1,13 +1,24 @@
-//#include "SettingManager.h"
-
 template <typename... Settings>
-SettingManager::SettingManager(Settings*... settings) {
+SettingManager::SettingManager(String restore_default_settings_key, Settings*... settings) {
+  this->setRestoreDefaultSettingsKey(restore_default_settings_key);
   this->setSettings(settings...);
 }
 
+template <typename... Settings>
+SettingManager::SettingManager(SettingType setting, Settings*... settings) {
+  this->setSettings(setting, settings...);
+}
+
 template <uint8_t Size>
-SettingManager::SettingManager(SettingType (&setting_array)[Size]) {
+SettingManager::SettingManager(String restore_default_settings_key, SettingType (&setting_array)[Size]) {
+  this->setRestoreDefaultSettingsKey(restore_default_settings_key);
   this->setSettings(setting_array);
+}
+
+template <uint8_t Size>
+SettingManager::SettingManager(SettingType (&setting_array)[Size], String restore_default_settings_key) {
+  this->setSettings(setting_array);
+  this->setRestoreDefaultSettingsKey(restore_default_settings_key);
 }
 
 bool SettingManager::addSetting(SettingType setting) {
@@ -61,6 +72,14 @@ bool SettingManager::setSettings(SettingType (&setting_array)[Size]) {
   return this->addSettings(setting_array);
 }
 
+void SettingManager::setRestoreDefaultSettingsKey(String restore_default_settings_key) {
+  this->restore_default_settings_key = restore_default_settings_key;
+}
+
+String SettingManager::getRestoreDefaultSettingsKey() {
+  return this->restore_default_settings_key;
+}
+
 bool SettingManager::clearSettings() {
   if (!this->setting_count > 0) {
     return false;
@@ -74,12 +93,10 @@ bool SettingManager::clearSettings() {
   return true;
 }
 
-bool SettingManager::restoreDefaultValues() {
-  bool success = false;
+void SettingManager::restoreDefaultSettings() {
   for (uint8_t i = 0; i < setting_count; i++) {
-    success = success || settings[i]->restoreDefaultValue();
+    settings[i]->restoreDefaultSetting();
   }
-  return success;
 }
 
 bool SettingManager::updateSettings(String input) {
@@ -88,6 +105,13 @@ bool SettingManager::updateSettings(String input) {
   
   String key = input.substring(0, semicolonIndex);
   String value = input.substring(semicolonIndex + 1, input.length() - 1); // TODO make this more flexible instead of simply removing the last newline character
+  
+  if (this->getRestoreDefaultSettingsKey() == key) {
+    if (this->getRestoreDefaultSettingsKey().length() > 0) {
+      this->restoreDefaultSettings();
+      return true;
+    }
+  }
   
   bool success = false;
   for (uint8_t i = 0; i < setting_count; i++) {
