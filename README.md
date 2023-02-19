@@ -1,10 +1,9 @@
 # SettingManager
 
-An Arduino library for managing settings.
+The SettingManager library provides a way to manage and update settings for an Arduino project.
 
 ## Table of Contents
 
-- [Description](#description)
 - [Usage](#usage)
   - [Creating setting variables](#creating-setting-variables)
   - [Creating setting objects](#creating-setting-objects)
@@ -13,10 +12,6 @@ An Arduino library for managing settings.
   - [Serial Monitor](#serial-monitor)
 - [Examples](#examples)
   - [LED Example](#led-example)
-
-## Description
-
-The SettingManager library provides a way to manage and update settings for an Arduino project.
 
 ## Usage
 
