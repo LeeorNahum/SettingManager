@@ -8,8 +8,22 @@ Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callba
 template <typename Type>
 Setting<Type>::Setting(String key, SettingCallback callback, Type* setting_pointer) {
   this->setKey(key);
-  this->setSettingPointer(setting_pointer);
   this->setCallback(callback);
+  this->setSettingPointer(setting_pointer);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void) {
+  this->setKey(key);
+  this->setSettingPointer(setting_pointer);
+  this->setCallback(callback_void);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, SettingCallbackVoid callback_void, Type* setting_pointer) {
+  this->setKey(key);
+  this->setCallback(callback_void);
+  this->setSettingPointer(setting_pointer);
 }
 
 template <typename Type>
@@ -36,6 +50,17 @@ Type* Setting<Type>::getSettingPointer() {
 template <typename Type>
 void Setting<Type>::setCallback(SettingCallback callback) {
   this->callback = callback;
+  if (callback) {
+    this->callback_void = nullptr;
+  }
+}
+
+template <typename Type>
+void Setting<Type>::setCallback(SettingCallbackVoid callback_void) {
+  this->callback_void = callback_void;
+  if (callback_void) {
+    this->callback = nullptr;
+  }
 }
 
 template <typename Type>
@@ -61,6 +86,7 @@ void Setting<Type>::setValue(String value) {
   
   if (this->setting_pointer) *this->setting_pointer = setting_value;
   if (this->callback) this->callback(setting_value);
+  else if (this->callback_void) this->callback_void();
 }
 
 template <>
@@ -71,6 +97,7 @@ void Setting<bool>::setValue(String value) {
 
   if (this->setting_pointer) *this->setting_pointer = setting_value;
   if (this->callback) this->callback(setting_value);
+  else if (this->callback_void) this->callback_void();
 }
 
 template <>
@@ -81,6 +108,7 @@ void Setting<char>::setValue(String value) {
 
   if (this->setting_pointer) *this->setting_pointer = setting_value;
   if (this->callback) this->callback(setting_value);
+  else if (this->callback_void) this->callback_void();
 }
 
 template <>
@@ -91,6 +119,7 @@ void Setting<float>::setValue(String value) {
 
   if (this->setting_pointer) *this->setting_pointer = setting_value;
   if (this->callback) this->callback(setting_value);
+  else if (this->callback_void) this->callback_void();
 }
 
 template <>
@@ -101,6 +130,7 @@ void Setting<double>::setValue(String value) {
 
   if (this->setting_pointer) *this->setting_pointer = setting_value;
   if (this->callback) this->callback(setting_value);
+  else if (this->callback_void) this->callback_void();
 }
 
 template <>
@@ -109,6 +139,7 @@ void Setting<String>::setValue(String value) {
   
   if (this->setting_pointer) *this->setting_pointer = value;
   if (this->callback) this->callback(value);
+  else if (this->callback_void) this->callback_void();
 }
 
 template <typename Type>

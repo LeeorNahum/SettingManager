@@ -13,10 +13,13 @@ class SettingBase {
 template <typename Type>
 class Setting: public SettingBase {
   public:
-    using SettingCallback = void (*)(Type); // TODO ? make void instead of passing value
+    using SettingCallback = void (*)(Type);
+    using SettingCallbackVoid = void (*)();
     
     Setting(String key, Type* setting_pointer, SettingCallback callback = nullptr);
     Setting(String key, SettingCallback callback, Type* setting_pointer = nullptr);
+    Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void = nullptr);
+    Setting(String key, SettingCallbackVoid callback_void, Type* setting_pointer = nullptr);
     
     void setKey(String key);
     String getKey() override;
@@ -25,6 +28,7 @@ class Setting: public SettingBase {
     Type* getSettingPointer();
     
     void setCallback(SettingCallback callback = nullptr);
+    void setCallback(SettingCallbackVoid callback_void = nullptr);
     
     void setDefaultSetting(String default_setting = "");
     String getDefaultSetting();
@@ -36,8 +40,11 @@ class Setting: public SettingBase {
     
   private:
     String key = "";
+    
     Type* setting_pointer = nullptr;
+    
     SettingCallback callback = nullptr;
+    SettingCallbackVoid callback_void = nullptr;
     
     String default_setting = "";
 };
