@@ -6,17 +6,17 @@ Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callba
 }
 
 template <typename Type>
-Setting<Type>::Setting(String key, SettingCallback callback, Type* setting_pointer) {
-  this->setKey(key);
-  this->setCallback(callback);
-  this->setSettingPointer(setting_pointer);
-}
-
-template <typename Type>
 Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void) {
   this->setKey(key);
   this->setSettingPointer(setting_pointer);
   this->setCallback(callback_void);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, SettingCallback callback, Type* setting_pointer) {
+  this->setKey(key);
+  this->setCallback(callback);
+  this->setSettingPointer(setting_pointer);
 }
 
 template <typename Type>
@@ -144,5 +144,8 @@ void Setting<String>::setValue(String value) {
 
 template <typename Type>
 Type Setting<Type>::getValue() {
-  return *this->setting_pointer;
+  if (this->setting_pointer) {
+    return *this->setting_pointer;
+  }
+  return 0;
 }
