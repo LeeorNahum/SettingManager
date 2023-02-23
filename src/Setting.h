@@ -17,7 +17,7 @@ class Setting: public SettingBase {
     using SettingCallbackVoid = void (*)();
     
     Setting(String key, Type* setting_pointer, SettingCallback callback = nullptr);
-    Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void = nullptr);
+    Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void);
     Setting(String key, SettingCallback callback, Type* setting_pointer = nullptr);
     Setting(String key, SettingCallbackVoid callback_void, Type* setting_pointer = nullptr);
     
