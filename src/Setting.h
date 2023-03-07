@@ -6,8 +6,8 @@
 class SettingBase {
   public:
     virtual String getKey() = 0;
-    virtual void restoreDefaultSetting() = 0;
-    virtual void setValue(String value = "") = 0;
+    virtual bool restoreDefaultSetting() = 0;
+    virtual void setValueParseString(String string_value = "") = 0;
 };
 
 template <typename Type>
@@ -15,7 +15,11 @@ class Setting: public SettingBase {
   public:
     using SettingCallback = void (*)(Type);
     using SettingCallbackVoid = void (*)();
+    //using UpdateSettingCallback = Type (*)(Type);
+    //using UpdateSettingCallbackVoid = Type (*)();
     
+    Setting(String key, Type default_setting, SettingCallback callback = nullptr);
+    Setting(String key, Type default_setting, SettingCallbackVoid callback_void);
     Setting(String key, Type* setting_pointer, SettingCallback callback = nullptr);
     Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void);
     Setting(String key, SettingCallback callback, Type* setting_pointer = nullptr);
@@ -24,29 +28,39 @@ class Setting: public SettingBase {
     void setKey(String key);
     String getKey() override;
     
+    void setValue(Type value);
+    void setValue();
+    Type getValue();
+    
+    Type getSettingPointerValue();
+    
+    void setDefaultSetting(Type default_setting);
+    void setDefaultSetting(); // TODO ? rename Setting to Value
+    Type getDefaultSetting();
+    bool hasDefaultSetting();
+    
     void setSettingPointer(Type* setting_pointer = nullptr);
     Type* getSettingPointer();
     
     void setCallback(SettingCallback callback = nullptr);
     void setCallback(SettingCallbackVoid callback_void = nullptr);
     
-    void setDefaultSetting(String default_setting = "");
-    String getDefaultSetting();
+    bool restoreDefaultSetting() override;
     
-    void restoreDefaultSetting() override;
-    
-    void setValue(String value = "") override;
-    Type getValue();
+    void setValueParseString(String string_value = "") override;
     
   private:
     String key = "";
+    
+    Type value = Type{};
+    
+    bool has_default_setting = false;
+    Type default_setting = Type{};
     
     Type* setting_pointer = nullptr;
     
     SettingCallback callback = nullptr;
     SettingCallbackVoid callback_void = nullptr;
-        
-    String default_setting = "";
 };
 
 #include "Setting.tpp"

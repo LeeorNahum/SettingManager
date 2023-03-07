@@ -120,7 +120,7 @@ bool SettingManager::updateSettings(String input) {
   bool success = false;
   for (uint8_t i = 0; i < setting_count; i++) {
     if (settings[i]->getKey() == key) {
-      settings[i]->setValue(value);
+      settings[i]->setValueParseString(value);
       success = true;
     }
   }
