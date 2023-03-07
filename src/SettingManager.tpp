@@ -95,11 +95,21 @@ bool SettingManager::clearSettings() {
 
 void SettingManager::restoreDefaultSettings() {
   for (uint8_t i = 0; i < setting_count; i++) {
-    settings[i]->restoreDefaultSetting();
+    settings[i]->restoreDefaultValue();
   }
 }
 
+#ifdef USE_ARDUINO_NVS
+void SettingManager::restoreSavedValues() {
+  for (uint8_t i = 0; i < setting_count; i++) {
+    settings[i]->restoreSavedValue();
+  }
+}
+#endif
+
 bool SettingManager::updateSettings(String input) {
+  if (input.length() == 0) return false;
+    
   int semicolonIndex = input.indexOf(":");
   if (semicolonIndex == -1) return false;
   

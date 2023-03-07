@@ -1,16 +1,16 @@
 template <typename Type>
-Setting<Type>::Setting(String key, Type default_setting, SettingCallback callback) {
+Setting<Type>::Setting(String key, Type default_value, SettingCallback callback) {
   this->setKey(key);
-  this->setValue(default_setting);
-  this->setDefaultSetting(default_setting);
+  this->setValue(default_value);
+  this->setDefaultValue(default_value);
   this->setCallback(callback);
 }
 
 template <typename Type>
-Setting<Type>::Setting(String, Type default_setting, SettingCallbackVoid callback_void) {
+Setting<Type>::Setting(String, Type default_value, SettingCallbackVoid callback_void) {
   this->setKey(key);
-  this->setValue(default_setting);
-  this->setDefaultSetting(default_setting);
+  this->setValue(default_value);
+  this->setDefaultValue(default_value);
   this->setCallback(callback_void);
 }
 
@@ -29,17 +29,15 @@ Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid ca
 }
 
 template <typename Type>
-Setting<Type>::Setting(String key, SettingCallback callback, Type* setting_pointer) {
+Setting<Type>::Setting(String key, SettingCallback callback) {
   this->setKey(key);
   this->setCallback(callback);
-  this->setSettingPointer(setting_pointer);
 }
 
 template <typename Type>
-Setting<Type>::Setting(String key, SettingCallbackVoid callback_void, Type* setting_pointer) {
+Setting<Type>::Setting(String key, SettingCallbackVoid callback_void) {
   this->setKey(key);
   this->setCallback(callback_void);
-  this->setSettingPointer(setting_pointer);
 }
 
 template <typename Type>
@@ -59,11 +57,15 @@ void Setting<Type>::setValue(Type value) {
   if (this->setting_pointer) *this->setting_pointer = this->value;
   if (this->callback) this->callback(this->value);
   else if (this->callback_void) this->callback_void();
+  
+  #ifdef USE_ARDUINO_NVS
+  this->setValueNVS(this->value);
+  #endif
 }
 
 template <typename Type>
 void Setting<Type>::setValue() {
-  return this->restoreDefaultSetting();
+  return this->restoreDefaultValue();
 }
 
 template <typename Type>
@@ -76,31 +78,31 @@ Type Setting<Type>::getSettingPointerValue() {
   if (this->setting_pointer) {
     return *this->setting_pointer;
   }
-  return this->getDefaultSetting();
+  return this->getDefaultValue();
 }
 
 template <typename Type>
-void Setting<Type>::setDefaultSetting(Type default_setting) {
+void Setting<Type>::setDefaultValue(Type default_value) {
   this->has_default_setting = true;
-  this->default_setting = default_setting;
+  this->default_value = default_value;
 }
 
 template <typename Type>
-void Setting<Type>::setDefaultSetting() {
+void Setting<Type>::setDefaultValue() {
   this->has_default_setting = false;
-  this->default_setting = 0;
+  this->default_value = Type{};
 }
 
 template <typename Type>
-Type Setting<Type>::getDefaultSetting() {
-  if (this->hasDefaultSetting()) {
-    return this->default_setting;
+Type Setting<Type>::getDefaultValue() {
+  if (this->hasDefaultValue()) {
+    return this->default_value;
   }
   return Type{};
 }
 
 template <typename Type>
-bool Setting<Type>::hasDefaultSetting() {
+bool Setting<Type>::hasDefaultValue() {
   return this->has_default_setting;
 }
 
@@ -108,10 +110,10 @@ template <typename Type>
 void Setting<Type>::setSettingPointer(Type* setting_pointer) {
   this->setting_pointer = setting_pointer;
   if (setting_pointer) {
-    this->setDefaultSetting(*setting_pointer);
+    this->setDefaultValue(*setting_pointer);
   }
   else {
-    this->setDefaultSetting();
+    this->setDefaultValue();
   }
 }
 
@@ -137,9 +139,9 @@ void Setting<Type>::setCallback(SettingCallbackVoid callback_void) {
 }
 
 template <typename Type>
-bool Setting<Type>::restoreDefaultSetting() {
-  if (this->hasDefaultSetting()) {
-    this->setValue(this->getDefaultSetting());
+bool Setting<Type>::restoreDefaultValue() {
+  if (this->hasDefaultValue()) {
+    this->setValue(this->getDefaultValue());
     return true;
   }
   return false;
@@ -148,7 +150,7 @@ bool Setting<Type>::restoreDefaultSetting() {
 template <typename Type>
 void Setting<Type>::setValueParseString(String string_value) {
   if (string_value.length() == 0) {
-    this->restoreDefaultSetting();
+    this->restoreDefaultValue();
     return;
   }
   
@@ -160,19 +162,19 @@ void Setting<Type>::setValueParseString(String string_value) {
 template <>
 void Setting<bool>::setValueParseString(String string_value) {
   if (string_value.length() == 0) {
-    this->restoreDefaultSetting();
+    this->restoreDefaultValue();
     return;
   }
   
-  bool setting_value = (string_value == "true" || string_value == "1" || string_value == "yes" || string_value == "on" || string_value == "HIGH");
+  bool bool_value = (string_value == "true" || string_value == "1" || string_value == "yes" || string_value == "on" || string_value == "HIGH");
   
-  this->setValue(setting_value);
+  this->setValue(bool_value);
 }
 
 template <>
 void Setting<char>::setValueParseString(String string_value) {
   if (string_value.length() == 0) {
-    this->restoreDefaultSetting();
+    this->restoreDefaultValue();
     return;
   }
   
@@ -184,7 +186,7 @@ void Setting<char>::setValueParseString(String string_value) {
 template <>
 void Setting<float>::setValueParseString(String string_value) {
   if (string_value.length() == 0) {
-    this->restoreDefaultSetting();
+    this->restoreDefaultValue();
     return;
   }
   
@@ -196,7 +198,7 @@ void Setting<float>::setValueParseString(String string_value) {
 template <>
 void Setting<double>::setValueParseString(String string_value) {
   if (string_value.length() == 0) {
-    this->restoreDefaultSetting();
+    this->restoreDefaultValue();
     return;
   }
   
@@ -208,9 +210,58 @@ void Setting<double>::setValueParseString(String string_value) {
 template <>
 void Setting<String>::setValueParseString(String string_value) {
   if (string_value.length() == 0) {
-    this->restoreDefaultSetting();
+    this->restoreDefaultValue();
     return;
   }
   
   this->setValue(string_value);
 }
+
+#ifdef USE_ARDUINO_NVS
+
+template <typename Type>
+void Setting<Type>::restoreSavedValue() {
+  this->setValue(this->getValueNVS());
+}
+
+template <typename Type>
+void Setting<Type>::setValueNVS(Type value) {
+  NVS.setInt(this->getKey(), value);
+}
+
+template <>
+void Setting<float>::setValueNVS(float value) {
+  NVS.setFloat(this->getKey(), value);
+}
+
+template <>
+void Setting<double>::setValueNVS(double value) {
+  NVS.setFloat(this->getKey(), value);
+}
+
+template <>
+void Setting<String>::setValueNVS(String value) {
+  NVS.setString(this->getKey(), value);
+}
+
+template <typename Type>
+Type Setting<Type>::getValueNVS() {
+  return NVS.getInt(this->getKey());
+}
+
+template <>
+float Setting<float>::getValueNVS() {
+  return NVS.getFloat(this->getKey());
+}
+
+template <>
+double Setting<double>::getValueNVS() {
+  return NVS.getFloat(this->getKey());
+}
+
+template <>
+String Setting<String>::getValueNVS() {
+  return NVS.getString(this->getKey());
+}
+
+#endif

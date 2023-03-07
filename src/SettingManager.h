@@ -1,6 +1,10 @@
 #ifndef SETTINGMANAGER_H
 #define SETTINGMANAGER_H
 
+#ifdef USE_ARDUINO_NVS
+#include <ArduinoNvs.h>
+#endif
+
 #ifndef MAX_SETTINGS_ARRAY_SIZE
 #define MAX_SETTINGS_ARRAY_SIZE 32
 #endif
@@ -38,6 +42,10 @@ class SettingManager {
     bool clearSettings();
     
     void restoreDefaultSettings();
+    
+    #ifdef USE_ARDUINO_NVS
+    void restoreSavedValues();
+    #endif
 
     bool updateSettings(String input);
     
