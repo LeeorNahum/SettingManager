@@ -93,7 +93,7 @@ bool SettingManager::clearSettings() {
   return true;
 }
 
-void SettingManager::restoreDefaultSettings() {
+void SettingManager::restoreDefaultValues() {
   for (uint8_t i = 0; i < setting_count; i++) {
     settings[i]->restoreDefaultValue();
   }
@@ -122,7 +122,7 @@ bool SettingManager::updateSettings(String input) {
   
   if (this->getRestoreDefaultSettingsKey() == key) {
     if (this->getRestoreDefaultSettingsKey().length() > 0) {
-      this->restoreDefaultSettings();
+      this->restoreDefaultValues();
       return true;
     }
   }

@@ -41,7 +41,7 @@ class SettingManager {
 
     bool clearSettings();
     
-    void restoreDefaultSettings();
+    void restoreDefaultValues();
     
     #ifdef USE_ARDUINO_NVS
     void restoreSavedValues();
