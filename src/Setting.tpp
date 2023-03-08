@@ -196,7 +196,8 @@ void Setting<bool>::setValueParseString(String string_value) {
     return;
   }
   
-  bool bool_value = (string_value == "true" || string_value == "1" || string_value == "yes" || string_value == "on" || string_value == "HIGH");
+  string_value.toLowerCase();
+  bool bool_value = (string_value == "true" || string_value == "1" || string_value == "yes" || string_value == "on" || string_value == "high");
   
   this->setValue(bool_value);
 }
