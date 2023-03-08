@@ -1,5 +1,10 @@
 template <typename Type>
-Setting<Type>::Setting(String key, Type default_value, SettingCallback callback) {
+#ifndef USE_ARDUINO_NVS
+Setting<Type>::Setting(String key, Type default_value, SettingCallback callback)
+#else
+Setting<Type>::Setting(String key, Type default_value, SettingCallback callback, bool use_nvs) : use_nvs(use_nvs)
+#endif
+{
   this->setKey(key);
   this->setValue(default_value);
   this->setDefaultValue(default_value);
@@ -7,7 +12,12 @@ Setting<Type>::Setting(String key, Type default_value, SettingCallback callback)
 }
 
 template <typename Type>
-Setting<Type>::Setting(String, Type default_value, SettingCallbackVoid callback_void) {
+#ifndef USE_ARDUINO_NVS
+Setting<Type>::Setting(String key, Type default_value, SettingCallbackVoid callback_void)
+#else
+Setting<Type>::Setting(String key, Type default_value, SettingCallbackVoid callback_void, bool use_nvs) : use_nvs(use_nvs)
+#endif
+{
   this->setKey(key);
   this->setValue(default_value);
   this->setDefaultValue(default_value);
@@ -15,27 +25,47 @@ Setting<Type>::Setting(String, Type default_value, SettingCallbackVoid callback_
 }
 
 template <typename Type>
-Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callback) {
+#ifndef USE_ARDUINO_NVS
+Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callback)
+#else
+Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callback, bool use_nvs) : use_nvs(use_nvs)
+#endif
+{
   this->setKey(key);
   this->setSettingPointer(setting_pointer);
   this->setCallback(callback);
 }
 
 template <typename Type>
-Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void) {
+#ifndef USE_ARDUINO_NVS
+Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void)
+#else
+Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void, bool use_nvs) : use_nvs(use_nvs)
+#endif
+{
   this->setKey(key);
   this->setSettingPointer(setting_pointer);
   this->setCallback(callback_void);
 }
 
 template <typename Type>
-Setting<Type>::Setting(String key, SettingCallback callback) {
+#ifndef USE_ARDUINO_NVS
+Setting<Type>::Setting(String key, SettingCallback callback)
+#else
+Setting<Type>::Setting(String key, SettingCallback callback, bool use_nvs) : use_nvs(use_nvs)
+#endif
+{
   this->setKey(key);
   this->setCallback(callback);
 }
 
 template <typename Type>
-Setting<Type>::Setting(String key, SettingCallbackVoid callback_void) {
+#ifndef USE_ARDUINO_NVS
+Setting<Type>::Setting(String key, SettingCallbackVoid callback_void)
+#else
+Setting<Type>::Setting(String key, SettingCallbackVoid callback_void, bool use_nvs) : use_nvs(use_nvs)
+#endif
+{
   this->setKey(key);
   this->setCallback(callback_void);
 }
@@ -220,48 +250,71 @@ void Setting<String>::setValueParseString(String string_value) {
 #ifdef USE_ARDUINO_NVS
 
 template <typename Type>
+void Setting<Type>::useNVS(bool use_nvs) {
+  this->use_nvs = use_nvs;
+}
+
+template <typename Type>
 void Setting<Type>::restoreSavedValue() {
-  this->setValue(this->getValueNVS());
+  if (this->use_nvs) {
+    this->setValue(this->getValueNVS());
+  }
 }
 
 template <typename Type>
 void Setting<Type>::setValueNVS(Type value) {
-  NVS.setInt(this->getKey(), value);
+  if (this->use_nvs) {
+    NVS.setInt(this->getKey(), value);
+  }
 }
 
 template <>
 void Setting<float>::setValueNVS(float value) {
-  NVS.setFloat(this->getKey(), value);
+  if (this->use_nvs) {
+    NVS.setFloat(this->getKey(), value);
+  }
 }
 
 template <>
 void Setting<double>::setValueNVS(double value) {
-  NVS.setFloat(this->getKey(), value);
+  if (this->use_nvs) {
+    NVS.setFloat(this->getKey(), value);
+  }
 }
 
 template <>
 void Setting<String>::setValueNVS(String value) {
-  NVS.setString(this->getKey(), value);
+  if (this->use_nvs) {
+    NVS.setString(this->getKey(), value);
+  }
 }
 
 template <typename Type>
 Type Setting<Type>::getValueNVS() {
-  return NVS.getInt(this->getKey());
+  if (this->use_nvs) {
+    return NVS.getInt(this->getKey());
+  }
 }
 
 template <>
 float Setting<float>::getValueNVS() {
-  return NVS.getFloat(this->getKey());
+  if (this->use_nvs) {
+    return NVS.getFloat(this->getKey());
+  }
 }
 
 template <>
 double Setting<double>::getValueNVS() {
-  return NVS.getFloat(this->getKey());
+  if (this->use_nvs) {
+    return NVS.getFloat(this->getKey());
+  }
 }
 
 template <>
 String Setting<String>::getValueNVS() {
-  return NVS.getString(this->getKey());
+  if (this->use_nvs) {
+    return NVS.getString(this->getKey());
+  }
 }
 
 #endif
