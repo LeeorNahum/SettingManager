@@ -1,73 +1,25 @@
 template <typename Type>
-#ifndef USE_ARDUINO_NVS
-Setting<Type>::Setting(String key, Type default_value, SettingCallback callback)
-#else
-Setting<Type>::Setting(String key, Type default_value, SettingCallback callback, bool use_nvs) : use_nvs(use_nvs)
-#endif
-{
+template <typename CallbackType>
+Setting<Type>::Setting(String key, CallbackType callback) {
   this->setKey(key);
-  this->setValue(default_value);
+  this->setCallback(callback);
+}
+
+template <typename Type>
+template <typename CallbackType>
+Setting<Type>::Setting(String key, Type default_value, CallbackType callback) {
+  this->setKey(key);
+  this->setValueNoUpdate(default_value);
   this->setDefaultValue(default_value);
   this->setCallback(callback);
 }
 
 template <typename Type>
-#ifndef USE_ARDUINO_NVS
-Setting<Type>::Setting(String key, Type default_value, SettingCallbackVoid callback_void)
-#else
-Setting<Type>::Setting(String key, Type default_value, SettingCallbackVoid callback_void, bool use_nvs) : use_nvs(use_nvs)
-#endif
-{
-  this->setKey(key);
-  this->setValue(default_value);
-  this->setDefaultValue(default_value);
-  this->setCallback(callback_void);
-}
-
-template <typename Type>
-#ifndef USE_ARDUINO_NVS
-Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callback)
-#else
-Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallback callback, bool use_nvs) : use_nvs(use_nvs)
-#endif
-{
+template <typename CallbackType>
+Setting<Type>::Setting(String key, Type* setting_pointer, CallbackType callback) {
   this->setKey(key);
   this->setSettingPointer(setting_pointer);
   this->setCallback(callback);
-}
-
-template <typename Type>
-#ifndef USE_ARDUINO_NVS
-Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void)
-#else
-Setting<Type>::Setting(String key, Type* setting_pointer, SettingCallbackVoid callback_void, bool use_nvs) : use_nvs(use_nvs)
-#endif
-{
-  this->setKey(key);
-  this->setSettingPointer(setting_pointer);
-  this->setCallback(callback_void);
-}
-
-template <typename Type>
-#ifndef USE_ARDUINO_NVS
-Setting<Type>::Setting(String key, SettingCallback callback)
-#else
-Setting<Type>::Setting(String key, SettingCallback callback, bool use_nvs) : use_nvs(use_nvs)
-#endif
-{
-  this->setKey(key);
-  this->setCallback(callback);
-}
-
-template <typename Type>
-#ifndef USE_ARDUINO_NVS
-Setting<Type>::Setting(String key, SettingCallbackVoid callback_void)
-#else
-Setting<Type>::Setting(String key, SettingCallbackVoid callback_void, bool use_nvs) : use_nvs(use_nvs)
-#endif
-{
-  this->setKey(key);
-  this->setCallback(callback_void);
 }
 
 template <typename Type>
@@ -81,15 +33,23 @@ String Setting<Type>::getKey() {
 }
 
 template <typename Type>
+bool Setting<Type>::hasKey() {
+  return this->getKey().length() != 0;
+}
+
+template <typename Type>
 void Setting<Type>::setValue(Type value) {
-  this->value = value;
+  if (this->set_value_callback != nullptr) value = this->set_value_callback(value);
+  else if (this->set_value_callback_void != nullptr) value = this->set_value_callback_void();
   
-  if (this->setting_pointer) *this->setting_pointer = this->value;
-  if (this->callback) this->callback(this->value);
-  else if (this->callback_void) this->callback_void();
+  this->setValueNoUpdate(value);
+  
+  if (this->setting_pointer != nullptr) *this->setting_pointer = value;
+  if (this->callback != nullptr) this->callback(value);
+  else if (this->callback_void != nullptr) this->callback_void();
   
   #ifdef USE_ARDUINO_NVS
-  this->setValueNVS(this->value);
+  this->setSavedValue(value);
   #endif
 }
 
@@ -105,7 +65,7 @@ Type Setting<Type>::getValue() {
 
 template <typename Type>
 Type Setting<Type>::getSettingPointerValue() {
-  if (this->setting_pointer) {
+  if (this->setting_pointer != nullptr) {
     return *this->setting_pointer;
   }
   return this->getDefaultValue();
@@ -113,33 +73,24 @@ Type Setting<Type>::getSettingPointerValue() {
 
 template <typename Type>
 void Setting<Type>::setDefaultValue(Type default_value) {
-  this->has_default_setting = true;
   this->default_value = default_value;
 }
 
 template <typename Type>
-void Setting<Type>::setDefaultValue() {
-  this->has_default_setting = false;
-  this->default_value = Type{};
-}
-
-template <typename Type>
 Type Setting<Type>::getDefaultValue() {
-  if (this->hasDefaultValue()) {
-    return this->default_value;
-  }
-  return Type{};
+  return this->default_value;
 }
 
 template <typename Type>
 bool Setting<Type>::hasDefaultValue() {
-  return this->has_default_setting;
+  return (this->default_value == Type{});
 }
 
 template <typename Type>
 void Setting<Type>::setSettingPointer(Type* setting_pointer) {
   this->setting_pointer = setting_pointer;
-  if (setting_pointer) {
+  if (setting_pointer != nullptr) {
+    this->setValueNoUpdate(*setting_pointer);
     this->setDefaultValue(*setting_pointer);
   }
   else {
@@ -153,18 +104,42 @@ Type* Setting<Type>::getSettingPointer() {
 }
 
 template <typename Type>
-void Setting<Type>::setCallback(SettingCallback callback) {
+void Setting<Type>::setCallback(Callback callback) {
   this->callback = callback;
-  if (callback) {
+  if (callback != nullptr) {
     this->callback_void = nullptr;
+    this->set_value_callback = nullptr;
+    this->set_value_callback_void = nullptr;
   }
 }
 
 template <typename Type>
-void Setting<Type>::setCallback(SettingCallbackVoid callback_void) {
+void Setting<Type>::setCallback(CallbackVoid callback_void) {
   this->callback_void = callback_void;
-  if (callback_void) {
+  if (callback_void != nullptr) {
     this->callback = nullptr;
+    this->set_value_callback = nullptr;
+    this->set_value_callback_void = nullptr;
+  }
+}
+
+template <typename Type>
+void Setting<Type>::setCallback(SetValueCallback set_value_callback) {
+  this->set_value_callback = set_value_callback;
+  if (callback_void != nullptr) {
+    this->callback = nullptr;
+    this->callback_void = nullptr;
+    this->set_value_callback_void = nullptr;
+  }
+}
+
+template <typename Type>
+void Setting<Type>::setCallback(SetValueCallbackVoid set_value_callback_void) {
+  this->set_value_callback_void = set_value_callback_void;
+  if (callback_void != nullptr) {
+    this->callback = nullptr;
+    this->callback_void = nullptr;
+    this->set_value_callback = nullptr;
   }
 }
 
@@ -248,74 +223,18 @@ void Setting<String>::setValueParseString(String string_value) {
   this->setValue(string_value);
 }
 
-#ifdef USE_ARDUINO_NVS
-
 template <typename Type>
-void Setting<Type>::useNVS(bool use_nvs) {
-  this->use_nvs = use_nvs;
-}
-
-template <typename Type>
-void Setting<Type>::restoreSavedValue() {
-  if (this->use_nvs) {
-    this->setValue(this->getValueNVS());
-  }
+void Setting<Type>::setCallback(Type default_value) {
+  this->setValueNoUpdate(default_value);
+  this->setDefaultValue(default_value);
 }
 
 template <typename Type>
-void Setting<Type>::setValueNVS(Type value) {
-  if (this->use_nvs) {
-    NVS.setInt(this->getKey(), value);
-  }
-}
-
-template <>
-void Setting<float>::setValueNVS(float value) {
-  if (this->use_nvs) {
-    NVS.setFloat(this->getKey(), value);
-  }
-}
-
-template <>
-void Setting<double>::setValueNVS(double value) {
-  if (this->use_nvs) {
-    NVS.setFloat(this->getKey(), value);
-  }
-}
-
-template <>
-void Setting<String>::setValueNVS(String value) {
-  if (this->use_nvs) {
-    NVS.setString(this->getKey(), value);
-  }
+void Setting<Type>::setCallback(Type* setting_pointer) {
+  this->setSettingPointer(setting_pointer);
 }
 
 template <typename Type>
-Type Setting<Type>::getValueNVS() {
-  if (this->use_nvs) {
-    return NVS.getInt(this->getKey());
-  }
+void Setting<Type>::setValueNoUpdate(Type value) {
+  this->value = value;
 }
-
-template <>
-float Setting<float>::getValueNVS() {
-  if (this->use_nvs) {
-    return NVS.getFloat(this->getKey());
-  }
-}
-
-template <>
-double Setting<double>::getValueNVS() {
-  if (this->use_nvs) {
-    return NVS.getFloat(this->getKey());
-  }
-}
-
-template <>
-String Setting<String>::getValueNVS() {
-  if (this->use_nvs) {
-    return NVS.getString(this->getKey());
-  }
-}
-
-#endif
