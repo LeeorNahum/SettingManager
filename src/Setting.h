@@ -16,7 +16,7 @@ class SettingBase {
 
 using SettingType = SettingBase*;
 
-template <typename Type>
+template <typename Type = int>
 class Setting: public SettingBase {
   public:
     using Callback = void (*)(Type);

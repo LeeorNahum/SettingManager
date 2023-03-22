@@ -5,7 +5,7 @@
 
 #include <ArduinoNvs.h>
 
-template <typename Type>
+template <typename Type = int>
 class SettingNVS: public Setting<Type> {
   public:
     template <typename CallbackType>
