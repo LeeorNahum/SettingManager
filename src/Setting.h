@@ -19,19 +19,21 @@ using SettingType = SettingBase*;
 template <typename Type = int>
 class Setting: public SettingBase {
   public:
-    using Callback = void (*)(Type);
-    using CallbackVoid = void (*)();
-    using SetValueCallback = Type (*)(Type);
-    using SetValueCallbackVoid = Type (*)();
+    using Callback = void (*)();
+    using ValueCallback = void (*)(Type);
+    using ValuePointerCallback = void (*)(Type*);
     
-    template <typename CallbackType>
-    Setting(String key = "", CallbackType callback = nullptr);
+    Setting(String key = "", Callback callback = nullptr);
+    Setting(String key, ValueCallback value_callback);
+    Setting(String key, ValuePointerCallback value_pointer_callback);
     
-    template <typename CallbackType>
-    Setting(String key, Type default_value, CallbackType callback = nullptr);
+    Setting(String key, Type default_value, Callback callback = nullptr);
+    Setting(String key, Type default_value, ValueCallback value_callback);
+    Setting(String key, Type default_value, ValuePointerCallback value_pointer_callback);
     
-    template <typename CallbackType>
-    Setting(String key, Type* setting_pointer, CallbackType callback = nullptr);
+    Setting(String key, Type* setting_pointer, Callback callback = nullptr);
+    Setting(String key, Type* setting_pointer, ValueCallback value_callback);
+    Setting(String key, Type* setting_pointer, ValuePointerCallback value_pointer_callback);
     
     virtual void setKey(String key);
     String getKey() override;
@@ -43,7 +45,8 @@ class Setting: public SettingBase {
     
     Type getSettingPointerValue();
     
-    void setDefaultValue(Type default_value = Type{});
+    void setDefaultValue(Type default_value);
+    void setDefaultValue();
     Type getDefaultValue();
     bool hasDefaultValue();
     
@@ -51,9 +54,8 @@ class Setting: public SettingBase {
     Type* getSettingPointer();
     
     void setCallback(Callback callback = nullptr);
-    void setCallback(CallbackVoid callback_void);
-    void setCallback(SetValueCallback set_value_callback);
-    void setCallback(SetValueCallbackVoid set_value_callback_void);
+    void setCallback(ValueCallback value_callback);
+    void setCallback(ValuePointerCallback value_pointer_callback);
     
     bool restoreDefaultValue() override;
     
@@ -64,19 +66,16 @@ class Setting: public SettingBase {
     
     Type value = Type{};
     
+    bool has_default_value = false;
     Type default_value = Type{};
     
     Type* setting_pointer = nullptr;
     
     Callback callback = nullptr;
-    CallbackVoid callback_void = nullptr;
-    SetValueCallback set_value_callback = nullptr;
-    SetValueCallbackVoid set_value_callback_void = nullptr;
+    ValueCallback value_callback = nullptr;
+    ValuePointerCallback value_pointer_callback = nullptr;
     
-    void setCallback(Type default_value);
-    void setCallback(Type* setting_pointer);
-    
-    void setValueNoUpdate(Type value);
+    void setValueNoCallbacks(Type value);
     
     #ifdef USE_ARDUINO_NVS
     virtual void setSavedValue(Type value) {}

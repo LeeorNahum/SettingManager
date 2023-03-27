@@ -1,25 +1,64 @@
 template <typename Type>
-template <typename CallbackType>
-Setting<Type>::Setting(String key, CallbackType callback) {
+Setting<Type>::Setting(String key, Callback callback) {
   this->setKey(key);
   this->setCallback(callback);
 }
 
 template <typename Type>
-template <typename CallbackType>
-Setting<Type>::Setting(String key, Type default_value, CallbackType callback) {
+Setting<Type>::Setting(String key, ValueCallback value_callback) {
   this->setKey(key);
-  this->setValueNoUpdate(default_value);
+  this->setCallback(value_callback);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, ValuePointerCallback value_pointer_callback) {
+  this->setKey(key);
+  this->setCallback(value_pointer_callback);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, Type default_value, Callback callback) {
+  this->setKey(key);
+  this->setValueNoCallbacks(default_value);
   this->setDefaultValue(default_value);
   this->setCallback(callback);
 }
 
 template <typename Type>
-template <typename CallbackType>
-Setting<Type>::Setting(String key, Type* setting_pointer, CallbackType callback) {
+Setting<Type>::Setting(String key, Type default_value, ValueCallback value_callback) {
+  this->setKey(key);
+  this->setValueNoCallbacks(default_value);
+  this->setDefaultValue(default_value);
+  this->setCallback(value_callback);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, Type default_value, ValuePointerCallback value_pointer_callback) {
+  this->setKey(key);
+  this->setValueNoCallbacks(default_value);
+  this->setDefaultValue(default_value);
+  this->setCallback(value_pointer_callback);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, Type* setting_pointer, Callback callback) {
   this->setKey(key);
   this->setSettingPointer(setting_pointer);
   this->setCallback(callback);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, Type* setting_pointer, ValueCallback value_callback) {
+  this->setKey(key);
+  this->setSettingPointer(setting_pointer);
+  this->setCallback(value_callback);
+}
+
+template <typename Type>
+Setting<Type>::Setting(String key, Type* setting_pointer, ValuePointerCallback value_pointer_callback) {
+  this->setKey(key);
+  this->setSettingPointer(setting_pointer);
+  this->setCallback(value_pointer_callback);
 }
 
 template <typename Type>
@@ -39,14 +78,11 @@ bool Setting<Type>::hasKey() {
 
 template <typename Type>
 void Setting<Type>::setValue(Type value) {
-  if (this->set_value_callback != nullptr) value = this->set_value_callback(value);
-  else if (this->set_value_callback_void != nullptr) value = this->set_value_callback_void();
+  if (this->value_pointer_callback != nullptr) this->value_pointer_callback(&value);
+  else if (this->value_callback != nullptr) this->value_callback(value);
+  else if (this->callback != nullptr) this->callback();
   
-  this->setValueNoUpdate(value);
-  
-  if (this->setting_pointer != nullptr) *this->setting_pointer = value;
-  if (this->callback != nullptr) this->callback(value);
-  else if (this->callback_void != nullptr) this->callback_void();
+  this->setValueNoCallbacks(value);
   
   #ifdef USE_ARDUINO_NVS
   this->setSavedValue(value);
@@ -73,7 +109,14 @@ Type Setting<Type>::getSettingPointerValue() {
 
 template <typename Type>
 void Setting<Type>::setDefaultValue(Type default_value) {
+  this->has_default_value = true;
   this->default_value = default_value;
+}
+
+template <typename Type>
+void Setting<Type>::setDefaultValue() {
+  this->has_default_value = false;
+  this->default_value  = Type{};
 }
 
 template <typename Type>
@@ -83,14 +126,14 @@ Type Setting<Type>::getDefaultValue() {
 
 template <typename Type>
 bool Setting<Type>::hasDefaultValue() {
-  return (this->default_value == Type{});
+  return this->has_default_value;
 }
 
 template <typename Type>
 void Setting<Type>::setSettingPointer(Type* setting_pointer) {
   this->setting_pointer = setting_pointer;
   if (setting_pointer != nullptr) {
-    this->setValueNoUpdate(*setting_pointer);
+    this->setValueNoCallbacks(*setting_pointer);
     this->setDefaultValue(*setting_pointer);
   }
   else {
@@ -107,39 +150,26 @@ template <typename Type>
 void Setting<Type>::setCallback(Callback callback) {
   this->callback = callback;
   if (callback != nullptr) {
-    this->callback_void = nullptr;
-    this->set_value_callback = nullptr;
-    this->set_value_callback_void = nullptr;
+    this->value_callback = nullptr;
+    this->value_pointer_callback = nullptr;
   }
 }
 
 template <typename Type>
-void Setting<Type>::setCallback(CallbackVoid callback_void) {
-  this->callback_void = callback_void;
-  if (callback_void != nullptr) {
+void Setting<Type>::setCallback(ValueCallback value_callback) {
+  this->value_callback = value_callback;
+  if (value_callback != nullptr) {
     this->callback = nullptr;
-    this->set_value_callback = nullptr;
-    this->set_value_callback_void = nullptr;
+    this->value_pointer_callback = nullptr;
   }
 }
 
 template <typename Type>
-void Setting<Type>::setCallback(SetValueCallback set_value_callback) {
-  this->set_value_callback = set_value_callback;
-  if (callback_void != nullptr) {
+void Setting<Type>::setCallback(ValuePointerCallback value_pointer_callback) {
+  this->value_pointer_callback = value_pointer_callback;
+  if (value_pointer_callback != nullptr) {
     this->callback = nullptr;
-    this->callback_void = nullptr;
-    this->set_value_callback_void = nullptr;
-  }
-}
-
-template <typename Type>
-void Setting<Type>::setCallback(SetValueCallbackVoid set_value_callback_void) {
-  this->set_value_callback_void = set_value_callback_void;
-  if (callback_void != nullptr) {
-    this->callback = nullptr;
-    this->callback_void = nullptr;
-    this->set_value_callback = nullptr;
+    this->value_callback = nullptr;
   }
 }
 
@@ -224,17 +254,7 @@ void Setting<String>::setValueParseString(String string_value) {
 }
 
 template <typename Type>
-void Setting<Type>::setCallback(Type default_value) {
-  this->setValueNoUpdate(default_value);
-  this->setDefaultValue(default_value);
-}
-
-template <typename Type>
-void Setting<Type>::setCallback(Type* setting_pointer) {
-  this->setSettingPointer(setting_pointer);
-}
-
-template <typename Type>
-void Setting<Type>::setValueNoUpdate(Type value) {
+void Setting<Type>::setValueNoCallbacks(Type value) {
   this->value = value;
+  if (this->setting_pointer != nullptr) *this->setting_pointer = value;
 }

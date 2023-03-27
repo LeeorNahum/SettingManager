@@ -94,14 +94,14 @@ bool SettingManager::clearSettings() {
 }
 
 void SettingManager::restoreDefaultValues() {
-  for (uint8_t i = 0; i < setting_count; i++) {
+  for (uint8_t i = 0; i < this->setting_count; i++) {
     settings[i]->restoreDefaultValue();
   }
 }
 
 #ifdef USE_ARDUINO_NVS
 void SettingManager::restoreSavedValues() {
-  for (uint8_t i = 0; i < setting_count; i++) {
+  for (uint8_t i = 0; i < this->setting_count; i++) {
     settings[i]->restoreSavedValue();
   }
 }
@@ -110,11 +110,11 @@ void SettingManager::restoreSavedValues() {
 bool SettingManager::updateSettings(String input) {
   if (input.length() == 0) return false;
     
-  int semicolonIndex = input.indexOf(":");
-  if (semicolonIndex == -1) return false;
+  int semicolon_index = input.indexOf(":");
+  if (semicolon_index == -1) return false;
   
-  String key = input.substring(0, semicolonIndex);
-  String value = input.substring(semicolonIndex + 1);
+  String key = input.substring(0, semicolon_index);
+  String value = input.substring(semicolon_index + 1);
   
   if (value.charAt(value.length() - 1) == '\n') {
     value.remove(value.length() - 1);
