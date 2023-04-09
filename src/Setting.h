@@ -35,6 +35,10 @@ class Setting: public SettingBase {
     Setting(String key, Type* setting_pointer, ValueCallback value_callback);
     Setting(String key, Type* setting_pointer, ValuePointerCallback value_pointer_callback);
     
+    Setting(String key, Type default_value, Type* setting_pointer, Callback callback = nullptr);
+    Setting(String key, Type default_value, Type* setting_pointer, ValueCallback value_callback);
+    Setting(String key, Type default_value, Type* setting_pointer, ValuePointerCallback value_pointer_callback);
+    
     virtual void setKey(String key);
     String getKey() override;
     bool hasKey();

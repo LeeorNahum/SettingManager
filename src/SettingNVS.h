@@ -20,6 +20,10 @@ class SettingNVS: public Setting<Type> {
     SettingNVS(String key, Type* setting_pointer, CallbackType callback = nullptr) :
       Setting<Type>(key, setting_pointer, callback) {}
     
+    template <typename CallbackType>
+    SettingNVS(String key, Type default_value, Type* setting_pointer, CallbackType callback = nullptr) :
+      Setting<Type>(key, default_value, setting_pointer, callback) {}
+    
     void setKey(String key) override;
     
     void setSavedValue(Type value) override;
