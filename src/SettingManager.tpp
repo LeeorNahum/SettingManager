@@ -109,16 +109,12 @@ void SettingManager::restoreSavedValues() {
 
 bool SettingManager::updateSettings(String input) {
   if (input.length() == 0) return false;
-    
+  
   int semicolon_index = input.indexOf(":");
   if (semicolon_index == -1) return false;
   
   String key = input.substring(0, semicolon_index);
   String value = input.substring(semicolon_index + 1);
-  
-  if (value.charAt(value.length() - 1) == '\n') {
-    value.remove(value.length() - 1);
-  }
   
   if (this->getRestoreDefaultSettingsKey() == key) {
     if (this->getRestoreDefaultSettingsKey().length() > 0) {
