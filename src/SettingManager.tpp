@@ -1,134 +1,48 @@
-template <typename... Settings>
-SettingManager::SettingManager(String restore_default_settings_key, Settings*... settings) {
-  this->setRestoreDefaultSettingsKey(restore_default_settings_key);
-  this->setSettings(settings...);
+SettingManager::SettingManager() {}
+
+SettingManager::~SettingManager() {
+  for (SettingBase* setting : this->settings) {
+    delete setting;
+  }
 }
 
-template <typename... Settings>
-SettingManager::SettingManager(SettingType setting, Settings*... settings) {
-  this->setSettings(setting, settings...);
+bool SettingManager::initNvs(String nvs_namespace) {
+  return NVS.begin(nvs_namespace);
 }
 
-template <uint8_t Size>
-SettingManager::SettingManager(String restore_default_settings_key, SettingType (&setting_array)[Size]) {
-  this->setRestoreDefaultSettingsKey(restore_default_settings_key);
-  this->setSettings(setting_array);
-}
-
-template <uint8_t Size>
-SettingManager::SettingManager(SettingType (&setting_array)[Size], String restore_default_settings_key) {
-  this->setSettings(setting_array);
-  this->setRestoreDefaultSettingsKey(restore_default_settings_key);
-}
-
-bool SettingManager::addSetting(SettingType setting) {
-  if (this->setting_count >= MAX_SETTINGS_ARRAY_SIZE) {
+template <typename Type>
+bool SettingManager::addSetting(String key, Type* var, Type default_value) {
+  if (var == nullptr) {
     return false;
   }
-
-  this->settings[this->setting_count++] = setting;
+  this->settings.push_back(new Setting<Type>(key, var, default_value));
   return true;
 }
 
-template <typename... Settings>
-bool SettingManager::addSettings(SettingType setting, Settings*... settings) {
-  bool success = true;
-  
-  success = success && addSetting(setting);
-  success = success && addSettings(settings...);
-  
-  return success;
-}
-
-bool SettingManager::addSettings() {
-  return true;
-}
-
-template <uint8_t Size>
-bool SettingManager::addSettings(SettingType (&setting_array)[Size]) {
-  bool success = true;
-
-  for (uint8_t i = 0; i < Size; i++) {
-    success = success && this->addSetting(setting_array[i]);
-  }
-
-  return success;
-}
-
-bool SettingManager::setSetting(SettingType setting) {
-  this->clearSettings();
-  return this->addSetting(setting);
-}
-
-template <typename... Settings>
-bool SettingManager::setSettings(Settings*... settings) {
-  this->clearSettings();
-  return this->addSettings(settings...);
-}
-
-template <uint8_t Size>
-bool SettingManager::setSettings(SettingType (&setting_array)[Size]) {
-  this->clearSettings();
-  return this->addSettings(setting_array);
-}
-
-void SettingManager::setRestoreDefaultSettingsKey(String restore_default_settings_key) {
-  this->restore_default_settings_key = restore_default_settings_key;
-}
-
-String SettingManager::getRestoreDefaultSettingsKey() {
-  return this->restore_default_settings_key;
-}
-
-bool SettingManager::clearSettings() {
-  if (!this->setting_count > 0) {
+template <typename Type>
+bool SettingManager::addSetting(String key, Type* var) {
+  if (var == nullptr) {
     return false;
   }
-  
-  for (uint8_t i = 0; i < MAX_SETTINGS_ARRAY_SIZE; i++) {
-    this->settings[i] = nullptr;
-  }
-  
-  this->setting_count = 0;
+  this->settings.push_back(new Setting<Type>(key, var));
   return true;
 }
 
-void SettingManager::restoreDefaultValues() {
-  for (uint8_t i = 0; i < this->setting_count; i++) {
-    settings[i]->restoreDefaultValue();
+void SettingManager::loadSavedSettings() {
+  for (SettingBase* setting : this->settings) {
+    setting->loadSavedSetting();
   }
 }
 
-#ifdef USE_ARDUINO_NVS
-void SettingManager::restoreSavedValues() {
-  for (uint8_t i = 0; i < this->setting_count; i++) {
-    settings[i]->restoreSavedValue();
+void SettingManager::loadDefaultSettings() {
+  for (SettingBase* setting : this->settings) {
+    setting->loadDefaultSetting();
   }
 }
-#endif
 
-bool SettingManager::updateSettings(String input) {
-  if (input.length() == 0) return false;
-  
-  int semicolon_index = input.indexOf(":");
-  if (semicolon_index == -1) return false;
-  
-  String key = input.substring(0, semicolon_index);
-  String value = input.substring(semicolon_index + 1);
-  
-  if (this->getRestoreDefaultSettingsKey() == key) {
-    if (this->getRestoreDefaultSettingsKey().length() > 0) {
-      this->restoreDefaultValues();
-      return true;
-    }
+bool SettingManager::saveSettings() {
+  for (SettingBase* setting : this->settings) {
+    setting->saveSetting();
   }
-  
-  bool success = false;
-  for (uint8_t i = 0; i < setting_count; i++) {
-    if (settings[i]->getKey() == key) {
-      settings[i]->setValueParseString(value);
-      success = true;
-    }
-  }
-  return success;
+  return NVS.commit();
 }

@@ -1,62 +1,32 @@
 #ifndef SETTINGMANAGER_H
 #define SETTINGMANAGER_H
 
-#ifndef MAX_SETTINGS_ARRAY_SIZE
-#define MAX_SETTINGS_ARRAY_SIZE 32
-#endif
-
-#include <WString.h>
-
+#include <Arduino.h>
+#include <vector>
+#include <ArduinoNvs.h>
 #include "Setting.h"
-#ifdef USE_ARDUINO_NVS
-#include "SettingNVS.h"
-#endif
 
 class SettingManager {
   public:
-    template <typename... Settings>
-    SettingManager(String restore_default_settings_key = "", Settings*... settings);
-    template <typename... Settings>
-    SettingManager(SettingType setting, Settings*... settings);
-    template <uint8_t Size>
-    SettingManager(String restore_default_settings_key, SettingType (&setting_array)[Size]);
-    template <uint8_t Size>
-    SettingManager(SettingType (&setting_array)[Size], String restore_default_settings_key = "");
-    
-    bool addSetting(SettingType setting);
-    template <typename... Settings>
-    bool addSettings(SettingType setting, Settings*... settings);
-    template <uint8_t Size>
-    bool addSettings(SettingType (&setting_array)[Size]);
-    
-    bool setSetting(SettingType setting);
-    template <typename... Settings>
-    bool setSettings(Settings*... settings);
-    template <uint8_t Size>
-    bool setSettings(SettingType (&setting_array)[Size]);
-    
-    void setRestoreDefaultSettingsKey(String restore_default_settings_key = "");
-    String getRestoreDefaultSettingsKey();
+  SettingManager(); // TODO use NVS pointer
+  ~SettingManager();
 
-    bool clearSettings();
-    
-    void restoreDefaultValues();
-    
-    #ifdef USE_ARDUINO_NVS
-    void restoreSavedValues();
-    #endif
+  bool initNvs(String nvs_namespace = "storage");
 
-    bool updateSettings(String input);
-    
+  template <typename Type>
+  bool addSetting(String key, Type* var, Type default_value);
+
+  template <typename Type>
+  bool addSetting(String key, Type* var);
+
+  void loadSavedSettings();
+  void loadDefaultSettings();
+  bool saveSettings();
+
   private:
-    SettingType settings[MAX_SETTINGS_ARRAY_SIZE] = {nullptr};
-    uint8_t setting_count = 0;
-    
-    String restore_default_settings_key = "";
-    
-    bool addSettings();
+  std::vector<SettingBase*> settings;
 };
 
 #include "SettingManager.tpp"
 
-#endif
+#endif /* SETTINGMANAGER_H */
