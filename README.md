@@ -1,205 +1,102 @@
 # SettingManager
 
-The SettingManager library provides a way to manage and update settings in an Arduino project.
+SettingManager is an Arduino library that provides an abstraction to manage settings, allowing easy access to save and load different data types with the support of NVS (Non-Volatile Storage) on ESP32.
+
+## Features
+
+- Save and load multiple settings from NVS with ease.
+- Default settings initialization.
+- Supports multiple data types including int, float, and String.
 
 ## Table of Contents
 
 - [Usage](#usage)
-  - [Creating setting variables](#creating-setting-variables)
-  - [Creating setting objects](#creating-setting-objects)
+  - [Initialization](#initialization)
+  - [Begin NVS](#begin-nvs)
+  - [Creating variables](#creating-variables)
   - [Adding settings](#adding-settings)
-  - [Updating settings](#updating-settings)
-  - [Serial Monitor](#serial-monitor)
-- [Examples](#examples)
-  - [LED Example](#led-example)
-  - [BluetoothSerial NVS Example](#bluetoothserial-nvs-example)
+  - [Loading and Saving Settings](#loading-and-saving-settings)
+    - [Load saved settings from NVS](#load-saved-settings-from-nvs)
+    - [Load default settings](#load-default-settings)
+    - [Save current settings](#save-current-settings)
 
 ## Usage
 
-The SettingManager library provides a simple interface for managing settings for an Arduino project. To use the library in your project, you need to include the library header:
+### Initialization
+
+Start by initializing the `SettingManager` with the desired NVS instance:
 
 ``` C++
 #include <SettingManager.h>
+
+ArduinoNvs my_nvs;
+SettingManager setting_manager(my_nvs);
 ```
 
-### Creating setting variables
-
-To create a setting, you need to make a variable which will store the value and be passed to the Setting object. To set the default value of the setting, initialize the variable:
+...or with the default:
 
 ``` C++
-bool LED_Red = HIGH;
-bool LED_Green = LOW;
-uint8_t LED_Blue = 0;
+#include <SettingManager.h>
+
+SettingManager setting_manager; // Same as: SettingManager setting_manager(NVS);
 ```
 
-### Creating setting objects
+### Begin NVS
 
-Now with the variables created, declare a Setting object with a key and the address of the setting variables. Use the same template type as the variable:
+Before performing any operations, initialize NVS. You can optionally provide a namespace.
 
 ``` C++
-Setting<bool> RedLEDSetting("led.red.state", &LED_Red);
-Setting<bool> GreenLEDSetting("led.green.state", &LED_Green);
-Setting<uint8_t> BlueLEDSetting("led.blue.brightness", &LED_Blue);
+setting_manager.nvsBegin();  // Using default namespace "storage"
+```
+
+``` C++
+setting_manager.nvsBegin("myNamespace"); // Using your own namespace
+```
+
+### Creating variables
+
+Create variables which you want to preserve in non-volatile storage. To set the default value of the setting, initialize the variable.
+
+``` C++
+String device_name = "My ESP32";
+bool led_red = HIGH;
+bool led_green;
 ```
 
 ### Adding settings
 
-Add settings to the SettingManager in the SettingManager constructor or using the addSetting() method. The first parameter specifies the key which will restore all of the settings to their defaults:
+You can add settings by providing a key (limted to 15 characters), a variable to associate with that key, and optionally a default value.
 
 ``` C++
-SettingManager settingManager("settings.default", &RedLEDSetting, &GreenLEDSetting, &BlueLEDSetting);
-
-// or
-
-SettingManager settingManager("settings.default");
-
-void setup() {
-  settingManager.addSettings(&RedLEDSetting, &GreenLEDSetting, &BlueLEDSetting);
-}
+// If you don't provide a default value, the current value of the variable is taken as the default:
+setting_manager.addSetting("device.name", &device_name);
+setting_manager.addSetting("red_led_state", &led_red);
+// The default value of `LOW` is used instead:
+setting_manager.addSetting("green_led_state", &led_green, LOW);
 ```
 
-### Updating settings
+### Loading and Saving Settings
 
-You can now write settings to the Serial Monitor in a `key:value` format to change the settings:
+#### Load saved settings from NVS
+
+Apply the saved values to the variables. If nothing is saved then the default value is applied instead.
 
 ``` C++
-void loop() {
-  if (Serial.available()) {
-    settingManager.updateSettings(Serial.readString());
-  }
-}
+setting_manager.loadSavedSettings();
 ```
 
-### Serial Monitor
+#### Load default settings
 
-Typing the following into the Serial Monitor will update the setting variables
-
->led.red.state:LOW
-
-`LED_Red = LOW`
-
->led.green.state:HIGH
-
-`LED_Green = HIGH`
-
->led.blue.brightness:150
-
-`LED_Blue = 150`
-
->led.blue.brightness:255
-
-`LED_Blue = 255`
-
->settings.default: `value ignored`
-
-`LED_Red = HIGH`
-
-`LED_Green = LOW`
-
-`LED_Blue = 0`
-
-## Examples
-
-### LED Example
-
-This is the full example from the [Usage](#usage) section. We first create three LEDs and a SettingManager object and set an initial values LEDs. In the loop function, we read from the Serial Monitor and pass the reading to the SettingManager's updateSettings method and then set the LEDs with digitalWrite or analogWrite.
+Apply the default values to the variables.
 
 ``` C++
-#include <SettingManager.h>
-
-// Define LED pins
-#define RED_LED_PIN 13
-#define GREEN_LED_PIN 2
-#define BLUE_LED_PIN 3 // PWM pin for analogWrite
-
-// Create setting variables with default values
-bool LED_Red = HIGH;
-bool LED_Green = LOW;
-uint8_t LED_Blue = 0;
-
-// Initialize Setting objects for all LEDs
-Setting<bool> RedLEDSetting("led.red.state", &LED_Red);
-Setting<bool> GreenLEDSetting("led.green.state", &LED_Green);
-Setting<uint8_t> BlueLEDSetting("led.blue.brightness", &LED_Blue);
-
-// Initialize the SettingManager object
-SettingManager settingManager("settings.default", &RedLEDSetting, &GreenLEDSetting, &BlueLEDSetting);
-
-void setup() {
-  // Begin serial communication
-  Serial.begin(115200);
-  
-  // Set the pins as output
-  pinMode(RED_LED_PIN, OUTPUT);
-  pinMode(GREEN_LED_PIN, OUTPUT);
-  pinMode(BLUE_LED_PIN, OUTPUT);
-}
-
-void loop() {
-  // Check if there is any data available on the serial port
-  if (Serial.available()) {
-    // Update the settings using the serial port
-    bool settings_updated = settingManager.updateSettings(Serial.readString());
-    
-    // Check if any settings were updated
-    if (settings_updated) {
-      digitalWrite(RED_LED_PIN, LED_Red);
-      digitalWrite(GREEN_LED_PIN, LED_Green);
-      analogWrite(BLUE_LED_PIN, LED_Blue);
-    }
-  }
-  
-  // Wait for 1 second
-  delay(1000);
-}
+setting_manager.loadDefaultSettings();
 ```
 
-### BluetoothSerial NVS Example
+#### Save current settings
 
-This example demonstrates reading from both Serial and BluetoothSerial and then saving the variable in flash using the NVS library.
+Saves all of the current values of the variables to their NVS key.
 
 ``` C++
-#include <BluetoothSerial.h>
-#include <ArduinoNvs.h>
-#include <SettingManager.h>
-
-BluetoothSerial SerialBT;
-
-String bluetooth_name = "Bluetooth Serial";
-
-void startBluetooth() {
-  SerialBT.end();
-  SerialBT.begin(bluetooth_name.c_str());
-}
-
-void bluetoothCallback(String name) {
-  NVS.setString("bluetooth_name", bluetooth_name);
-
-  startBluetooth();
-}
-
-Setting<String> BluetoothName("name", &bluetooth_name, bluetoothCallback);
-
-SettingManager settingManager(&BluetoothName);
-
-void setup() {
-  Serial.begin(115200);
-
-  NVS.begin();
-  bluetooth_name = NVS.getString("bluetooth_name");
-
-  startBluetooth();
-}
-
-void loop() {
-  if (Serial.available()) {
-    settingManager.updateSettings(Serial.readString());
-  }
-
-  if (SerialBT.available()) {
-    settingManager.updateSettings(SerialBT.readString());
-  }
-
-  delay(1000);
-}
+setting_manager.saveSettings();
 ```

@@ -1,43 +1,34 @@
 #include <BluetoothSerial.h>
-#include <ArduinoNvs.h>
 #include <SettingManager.h>
 
 BluetoothSerial SerialBT;
 
 String bluetooth_name = "Bluetooth Serial";
+SettingManager setting_manager;
 
 void startBluetooth() {
   SerialBT.end();
   SerialBT.begin(bluetooth_name.c_str());
 }
 
-void bluetoothCallback(String name) {
-  NVS.setString("bluetooth_name", bluetooth_name);
-
-  startBluetooth();
-}
-
-Setting<String> BluetoothName("name", &bluetooth_name, bluetoothCallback);
-
-SettingManager settingManager(&BluetoothName);
-
 void setup() {
   Serial.begin(115200);
 
-  NVS.begin();
-  bluetooth_name = NVS.getString("bluetooth_name");
+  setting_manager.nvsBegin();
+  setting_manager.addSetting("bluetooth_name", &bluetooth_name);
+  setting_manager.loadSavedSettings();
 
   startBluetooth();
 }
 
 void loop() {
   if (Serial.available()) {
-    settingManager.updateSettings(Serial.readString());
+    bluetooth_name = Serial.readString();
+    setting_manager.saveSettings();
   }
-
   if (SerialBT.available()) {
-    settingManager.updateSettings(SerialBT.readString());
+    bluetooth_name = SerialBT.readString();
+    setting_manager.saveSettings();
   }
-
-  delay(1000);
+  delay(20);
 }

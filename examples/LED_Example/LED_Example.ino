@@ -10,13 +10,7 @@ bool LED_Red = HIGH;
 bool LED_Green = LOW;
 uint8_t LED_Blue = 0;
 
-// Initialize Setting objects for all LEDs
-Setting<bool> RedLEDSetting("led.red.state", &LED_Red);
-Setting<bool> GreenLEDSetting("led.green.state", &LED_Green);
-Setting<uint8_t> BlueLEDSetting("led.blue.brightness", &LED_Blue);
-
-// Initialize the SettingManager object
-SettingManager settingManager("settings.default", &RedLEDSetting, &GreenLEDSetting, &BlueLEDSetting);
+SettingManager settingManager(NVS);
 
 void setup() {
   // Begin serial communication
@@ -26,6 +20,13 @@ void setup() {
   pinMode(RED_LED_PIN, OUTPUT);
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(BLUE_LED_PIN, OUTPUT);
+
+  // Initialize Setting objects for all LEDs
+  settingManager.addSetting("led.red.state", &LED_Red, HIGH);
+  settingManager.addSetting("led.green.state", &LED_Green, LOW);
+  settingManager.addSetting("led.blue.brightness", &LED_Blue, 0);
+
+  settingManager.loadSavedSettings();
 }
 
 void loop() {
