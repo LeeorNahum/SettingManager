@@ -22,8 +22,10 @@ class Setting : public SettingBase {
   private:
   friend class SettingManager;
 
-  Setting(String key, Type* var, Type default_value);
-  Setting(String key, Type* var);
+  Setting(ArduinoNvs &nvs, String key, Type* var, Type default_value);
+  Setting(ArduinoNvs &nvs, String key, Type* var);
+
+  ArduinoNvs& nvs;
 
   String key;
   Type* var; // TODO ? enum typecasting

@@ -8,10 +8,10 @@
 
 class SettingManager {
   public:
-  SettingManager(); // TODO use NVS pointer
+  SettingManager(ArduinoNvs &nvs = NVS);
   ~SettingManager();
 
-  bool initNvs(String nvs_namespace = "storage");
+  bool nvsBegin(String nvs_namespace = "storage");
 
   template <typename Type>
   bool addSetting(String key, Type* var, Type default_value);
@@ -24,6 +24,8 @@ class SettingManager {
   bool saveSettings();
 
   private:
+  ArduinoNvs& nvs;
+  
   std::vector<SettingBase*> settings;
 };
 

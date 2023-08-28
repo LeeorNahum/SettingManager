@@ -1,4 +1,5 @@
-SettingManager::SettingManager() {}
+SettingManager::SettingManager(ArduinoNvs &nvs)
+  : nvs(nvs) {}
 
 SettingManager::~SettingManager() {
   for (SettingBase* setting : this->settings) {
@@ -6,8 +7,8 @@ SettingManager::~SettingManager() {
   }
 }
 
-bool SettingManager::initNvs(String nvs_namespace) {
-  return NVS.begin(nvs_namespace);
+bool SettingManager::nvsBegin(String nvs_namespace) {
+  return this->nvs.begin(nvs_namespace);
 }
 
 template <typename Type>
@@ -15,7 +16,7 @@ bool SettingManager::addSetting(String key, Type* var, Type default_value) {
   if (var == nullptr) {
     return false;
   }
-  this->settings.push_back(new Setting<Type>(key, var, default_value));
+  this->settings.push_back(new Setting<Type>(this->nvs, key, var, default_value));
   return true;
 }
 
@@ -24,7 +25,7 @@ bool SettingManager::addSetting(String key, Type* var) {
   if (var == nullptr) {
     return false;
   }
-  this->settings.push_back(new Setting<Type>(key, var));
+  this->settings.push_back(new Setting<Type>(this->nvs, key, var));
   return true;
 }
 
@@ -44,5 +45,5 @@ bool SettingManager::saveSettings() {
   for (SettingBase* setting : this->settings) {
     setting->saveSetting();
   }
-  return NVS.commit();
+  return this->nvs.commit();
 }
